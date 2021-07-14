@@ -25,13 +25,13 @@ type ifxConfig struct {
 var describeQuery string
 
 // IfxProvider struct is the structure implementing Provider interface
-type IfxProvider struct {
+type Provider struct {
 	cfg ifxConfig
 }
 
 // New creates new Informix Provider
-func New(configPath string) (IfxProvider, error) {
-	var ifx IfxProvider
+func New(configPath string) (Provider, error) {
+	var ifx Provider
 
 	err := ifx.Initialize(configPath)
 	if err != nil {
@@ -43,7 +43,7 @@ func New(configPath string) (IfxProvider, error) {
 
 // Initialize reads config and returns the provider with configuration read
 // from the config. By default it is called by New function, but can be used standalone.
-func (ifx *IfxProvider) Initialize(configPath string) (err error) {
+func (ifx *Provider) Initialize(configPath string) (err error) {
 	err = config.ReadTOML(&ifx.cfg, configPath)
 	if err != nil {
 		return fmt.Errorf("unable to read config: %s", err.Error())
@@ -54,7 +54,7 @@ func (ifx *IfxProvider) Initialize(configPath string) (err error) {
 
 // GetTableDescription retrieves basic table description from database.
 // Using describe.sql it retrieves info about every column of table.
-func (ifx IfxProvider) GetTableDescription(name string) (dsc []providers.Describe, err error) {
+func (ifx Provider) GetTableDescription(name string) (dsc []providers.Describe, err error) {
 	conn, err := connect(ifx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to connect: %s", err.Error())
@@ -88,21 +88,21 @@ func (ifx IfxProvider) GetTableDescription(name string) (dsc []providers.Describ
 }
 
 // ProviderName is interface function.
-func (ifx IfxProvider) ProviderName() string {
+func (ifx Provider) ProviderName() string {
 	return ifx.cfg.ProviderName
 }
 
 // DateFormat is interface function.
-func (ifx IfxProvider) DateFormat() string {
+func (ifx Provider) DateFormat() string {
 	return ifx.cfg.Formats.DateFormat
 }
 
 // DateTimeFormat is interface function.
-func (ifx IfxProvider) DateTimeFormat() string {
+func (ifx Provider) DateTimeFormat() string {
 	return ifx.cfg.Formats.DateTimeFormat
 }
 
-func connect(ifx IfxProvider) (conn *sql.DB, err error) {
+func connect(ifx Provider) (conn *sql.DB, err error) {
 	conn, err = sql.Open("odbc", fmt.Sprintf("DSN=%s", ifx.cfg.DataSourceName))
 	if err != nil {
 		return nil, fmt.Errorf("openning connection failed: %s", err.Error())

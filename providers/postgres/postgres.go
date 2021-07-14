@@ -6,10 +6,11 @@ package postgres
 import (
 
 	// embed is used here for including describe.sql file during compilation.
+	"context"
 	_ "embed"
 	"fmt"
 
-	"github.com/jackc/pgx"
+	"github.com/jackc/pgx/v4"
 	"github.com/shanduur/squat/config"
 	"github.com/shanduur/squat/providers"
 )
@@ -29,28 +30,28 @@ var describeQuery string
 
 var dbURL = "postgresql://%v:%v/%v?user=%v&password=%v"
 
-// PgProvider struct contains config and is the implementation of Providers
+// Provider struct contains config and is the implementation of Providers
 // interface for PostgreSQL database.
-type PgProvider struct {
+type Provider struct {
 	cfg pgConfig
 }
 
 // New reads provided config and creates new Postgres Provider.
-func New(configPath string) (PgProvider, error) {
-	var pg PgProvider
+func New(configPath string) (Provider, error) {
+	var p Provider
 
-	err := pg.Initialize(configPath)
+	err := p.Initialize(configPath)
 	if err != nil {
-		return pg, fmt.Errorf("unable to initialize: %s", err.Error())
+		return p, fmt.Errorf("unable to initialize: %s", err.Error())
 	}
 
-	return pg, nil
+	return p, nil
 }
 
 // Initialize reads config and returns the provider with configuration read
 // from the config. By default it is called by New function, but can be used standalone.
-func (pg *PgProvider) Initialize(configPath string) (err error) {
-	err = config.ReadTOML(&pg.cfg, configPath)
+func (p *Provider) Initialize(configPath string) (err error) {
+	err = config.ReadTOML(&p.cfg, configPath)
 	if err != nil {
 		return fmt.Errorf("unable to read config: %s", err.Error())
 	}
@@ -59,19 +60,19 @@ func (pg *PgProvider) Initialize(configPath string) (err error) {
 }
 
 // ProviderName is interface function.
-func (pg PgProvider) ProviderName() string {
-	return pg.cfg.ProviderName
+func (p Provider) ProviderName() string {
+	return p.cfg.ProviderName
 }
 
 // GetTableDescription retrieves basic table description from database.
 // Using describe.sql it retrieves info about every column of table.
-func (pg PgProvider) GetTableDescription(name string) (dsc []providers.Describe, err error) {
-	conn, err := connect(pg)
+func (p Provider) GetTableDescription(name string) (dsc []providers.Describe, err error) {
+	conn, err := connect(p)
 	if err != nil {
 		return nil, fmt.Errorf("unable to connect: %s", err.Error())
 	}
 
-	rows, err := conn.Query(describeQuery, name)
+	rows, err := conn.Query(context.Background(), describeQuery, name)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute statement: %s", err.Error())
 	}
@@ -94,23 +95,18 @@ func (pg PgProvider) GetTableDescription(name string) (dsc []providers.Describe,
 }
 
 // DateFormat is interface function.
-func (pg PgProvider) DateFormat() string {
-	return pg.cfg.Formats.DateFormat
+func (p Provider) DateFormat() string {
+	return p.cfg.Formats.DateFormat
 }
 
 // DateTimeFormat is interface function.
-func (pg PgProvider) DateTimeFormat() string {
-	return pg.cfg.Formats.DateTimeFormat
+func (p Provider) DateTimeFormat() string {
+	return p.cfg.Formats.DateTimeFormat
 }
 
-func connect(pg PgProvider) (conn *pgx.Conn, err error) {
-	conn, err = pgx.Connect(pgx.ConnConfig{
-		Host:     pg.cfg.Address,
-		Port:     pg.cfg.Port,
-		Database: pg.cfg.Database,
-		User:     pg.cfg.User,
-		Password: pg.cfg.Password,
-	})
+func connect(p Provider) (conn *pgx.Conn, err error) {
+	conn, err = pgx.Connect(context.Background(),
+		fmt.Sprintf("postgresql://%s:%d/%s?user=%s&password=%s", p.cfg.Address, p.cfg.Port, p.cfg.Database, p.cfg.User, p.cfg.Password))
 	if err != nil {
 		err = fmt.Errorf("unable to connect to database: %s", err.Error())
 		return

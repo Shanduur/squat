@@ -1,0 +1,5 @@
+provider-name = "MySQL"
+
+[formats]
+date = "2006-01-02"
+datetime = "2006-01-02 15:04:05.000"
