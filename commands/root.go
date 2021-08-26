@@ -4,7 +4,9 @@ import (
 	"log"
 	"os"
 
-	"github.com/shanduur/squat/server"
+	server "github.com/shanduur/simple-srv"
+	"github.com/shanduur/squat/server/api"
+	"github.com/shanduur/squat/server/frontend"
 	"github.com/spf13/cobra"
 )
 
@@ -23,6 +25,11 @@ It generates synthetic SQL data based on the table definition, that is gathered 
 Squat supports IBM Informix, with planned support for PostgreSQL, MySQL, CockroachDB and MariaDB.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		srv := server.New(port)
+
+		rAPI := srv.AddSubRouter("/api/v1/")
+
+		api.RegisterEndpoints(rAPI)
+		frontend.RegisterEndpoints(srv.MainRouter)
 
 		if *showEnv {
 			info()
