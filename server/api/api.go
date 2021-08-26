@@ -14,11 +14,11 @@ import (
 	"strings"
 
 	"github.com/gorilla/mux"
+	server "github.com/shanduur/simple-srv"
 	"github.com/shanduur/squat/generator"
 	"github.com/shanduur/squat/providers"
 	"github.com/shanduur/squat/providers/informix"
 	"github.com/shanduur/squat/providers/postgres"
-	"github.com/shanduur/squat/server/website"
 )
 
 func init() {
@@ -55,7 +55,7 @@ func generate(w http.ResponseWriter, req *http.Request) {
 
 	p := Providers[src]
 	if p == nil {
-		website.PrintError(w, fmt.Errorf("data source not found: %s", src), http.StatusInternalServerError)
+		server.PrintError(w, fmt.Errorf("data source not found: %s", src), http.StatusInternalServerError)
 		return
 	}
 
@@ -63,13 +63,13 @@ func generate(w http.ResponseWriter, req *http.Request) {
 
 	tab, err := parse(req.Form)
 	if err != nil {
-		website.PrintError(w, fmt.Errorf("unable to parse request form: %s", err.Error()), http.StatusBadRequest)
+		server.PrintError(w, fmt.Errorf("unable to parse request form: %s", err.Error()), http.StatusBadRequest)
 		return
 	}
 
 	gen, err := generator.New(path.Join(os.Getenv("DATA_LOCATION"), "data.gob"))
 	if err != nil {
-		website.PrintError(w, fmt.Errorf("unable to get generator: %s", err.Error()), http.StatusInternalServerError)
+		server.PrintError(w, fmt.Errorf("unable to get generator: %s", err.Error()), http.StatusInternalServerError)
 		return
 	}
 
@@ -81,7 +81,7 @@ func generate(w http.ResponseWriter, req *http.Request) {
 		gen.SetSeed(int64(i))
 		q, err := gen.Query(req.FormValue("source-table"), tab)
 		if err != nil {
-			website.PrintError(w, fmt.Errorf("unable to generate query: %s", err.Error()), http.StatusInternalServerError)
+			server.PrintError(w, fmt.Errorf("unable to generate query: %s", err.Error()), http.StatusInternalServerError)
 			return
 		}
 

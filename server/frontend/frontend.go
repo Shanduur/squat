@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	server "github.com/shanduur/simple-srv"
 	"github.com/shanduur/squat/server/api"
 	"github.com/shanduur/squat/server/website"
 )
@@ -31,13 +32,13 @@ func handleTable(w http.ResponseWriter, req *http.Request) {
 	if p != nil {
 		dsc, err := p.GetTableDescription(tab)
 		if err != nil {
-			website.PrintError(w, fmt.Errorf("unable to get table description: %s", err.Error()), http.StatusNotFound)
+			server.PrintError(w, fmt.Errorf("unable to get table description: %s", err.Error()), http.StatusNotFound)
 			return
 		}
 
 		out, err := website.BuildTables(src, tab, dsc)
 		if err != nil {
-			website.PrintError(w, fmt.Errorf("unable to build tables: %s", err.Error()), http.StatusInternalServerError)
+			server.PrintError(w, fmt.Errorf("unable to build tables: %s", err.Error()), http.StatusInternalServerError)
 			return
 		}
 		w.Write([]byte(out))

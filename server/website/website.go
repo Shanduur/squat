@@ -8,8 +8,6 @@ import (
 	// embed is used hre for including templates into the binary
 	_ "embed"
 	"fmt"
-	"log"
-	"net/http"
 	"os"
 	"path"
 	"strings"
@@ -168,21 +166,4 @@ func BuildIndex(providers map[string]providers.Provider) string {
 	output = strings.ReplaceAll(output, template["options"], options)
 
 	return output
-}
-
-// PrintError is a function that parses error in the handler functions.
-// Its main functionality is to create cimple page displaying error code,
-// as well as some basic information about the error to the end user.
-func PrintError(w http.ResponseWriter, err error, statusCode int) {
-	w.WriteHeader(statusCode)
-
-	output := strings.ReplaceAll(mainHTML, template["head"], headHTML)
-	output = strings.ReplaceAll(output, template["body"], bodyErrorHTML)
-	output = strings.ReplaceAll(output, template["script"], "")
-	output = strings.ReplaceAll(output, template["order"], fmt.Sprint(statusCode))
-	output = strings.ReplaceAll(output, template["message"], err.Error())
-
-	w.Write([]byte(output))
-
-	log.Print(err.Error())
 }
